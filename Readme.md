@@ -7,7 +7,8 @@ Terraform module to create an Azure Storage Account.
 - [Azure Resource Naming Convention](#azure-resource-naming-convention)
     - [Format](#Format)
     - [Components](#Components)
-- [network_rules](#network_rules)
+- [Network Rules](#network-rules)
+- [Anonymous Access](#anonymous-access)
 - [Requirements](#requirements)
 - [Providers](#providers)
 - [Modules](#modules)
@@ -35,7 +36,7 @@ Resource names should clearly indicate their type, workload, environment, and re
 | `region`                 | Azure region where the resource resides (e.g., `cus` for `centralus`).              | `cus`                  |
 | `optional_unique_suffix` | Optional unique string for ensuring name uniqueness, often random or incremental.    | `abcd`, `a42n`                 |
 
-## network_rules
+## Network Rules
 
     for_each = (
       try(var.network_rules, {}) != {} &&
@@ -98,6 +99,17 @@ Resource names should clearly indicate their type, workload, environment, and re
 │   on .terraform/modules/storage_account/storageAccount/main.tf line 6, in resource "azurerm_storage_account" "storage_account":
 │    6: resource "azurerm_storage_account" "storage_account" {
 ```
+## Anonymous Access
+
+- Set the anonymous access level for a storage account
+    - set `allow_nested_items_to_be_public` value = true
+
+- Set the anonymous access level for a container
+    - https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure?tabs=portal#set-the-anonymous-access-level-for-a-container
+
+- Key points
+    - `is_hns_enabled=true` when `versioning_enabled=false` and vice-versa
+    - ![alt text](images/anonymous-access.png)
 
 ## Requirements
 

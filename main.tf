@@ -1,8 +1,6 @@
 #-----------------
 # Storage Account
 #-----------------
-data "azurerm_client_config" "current" {}
-
 resource "azurerm_storage_account" "storage_account" {
   name                             = var.name
   resource_group_name              = var.resource_group_name
