@@ -40,7 +40,7 @@ module "user_assigned_identity" {
 module "storage_account" {
   source = "git::https://github.com/QuestOpsHub/terraform-azurerm-storage-account.git?ref=v1.0.0"
 
-  name                     = lower(replace("kv-${local.resource_suffix}-${module.random_string.result}", "/[[:^alnum:]]/", ""))
+  name                     = lower(replace("st-${local.resource_suffix}-${module.random_string.result}", "/[[:^alnum:]]/", ""))
   resource_group_name      = module.resource_group.name
   location                 = module.resource_group.location
   account_tier             = "Standard"
