@@ -1,3 +1,104 @@
+# Azure Storage Account Terraform Module
+
+Terraform module to create an Azure Storage Account.
+
+# Table of Contents
+
+- [Azure Resource Naming Convention](#azure-resource-naming-convention)
+    - [Format](#Format)
+    - [Components](#Components)
+- [network_rules](#network_rules)
+- [Requirements](#requirements)
+- [Providers](#providers)
+- [Modules](#modules)
+- [Resources](#resources)
+- [Inputs](#inputs)
+- [Outputs](#outputs)
+
+## Azure Resource Naming Convention
+
+Resource names should clearly indicate their type, workload, environment, and region. Using a consistent naming convention ensures clarity, uniformity, and easy identification across all repositories.
+
+#### Format
+
+```
+<resource_prefix>-<app_or_project>-<environment>-<region>-<optional_unique_suffix>
+```
+
+#### Components
+
+| **Component**           | **Description**                                                                      | **Example**             |
+|--------------------------|--------------------------------------------------------------------------------------|-------------------------|
+| `resource_prefix`        | Short abbreviation for the resource type.                                           | `rg` (Resource Group)   |
+| `app_or_project`         | Identifier for the application or project.                                          | `qoh`           |
+| `environment`            | Environment where the resource is deployed (`prod`, `dev`, `test`, etc.).           | `prod`                 |
+| `region`                 | Azure region where the resource resides (e.g., `cus` for `centralus`).              | `cus`                  |
+| `optional_unique_suffix` | Optional unique string for ensuring name uniqueness, often random or incremental.    | `abcd`, `a42n`                 |
+
+## network_rules
+
+    for_each = (
+      try(var.network_rules, {}) != {} &&
+      (
+        (lookup(var.network_rules, "ip_rules", null) != null || length(lookup(var.network_rules, "virtual_network_subnet_ids", [])) > 0) &&
+        lookup(var.network_rules, "default_action", "Deny") == "Deny"
+      )
+    ) ? [var.network_rules] : []
+
+    diff from the main.tf
+
+- `service_endpoints` must be configured to the subnet before adding `network_acls` block.
+
+```
+ service_endpoints = ["Microsoft.Storage"]
+```
+
+
+```
+  network_rules = {
+    default_action = "Deny"
+    bypass         = ["AzureServices", "Metrics"]
+    ip_rules       = []
+    subnet_details = {
+      default = {
+        vnet_rg_name = "rg-jumpbox-hub-dev-scus"
+        vnet_name    = "vnet-jumpbox-hub-dev-scus"
+        subnet_name  = "default"
+      },
+      vpntest = {
+        vnet_rg_name = "rg-jumpbox-hub-dev-scus"
+        vnet_name    = "vnet-jumpbox-hub-dev-scus"
+        subnet_name  = "vpntest"
+      }
+    }
+    private_link_access = {}
+  }
+```
+
+```
+│ Error: creating Storage Account (Subscription: "f5db7161-4296-45e8-96e3-e67567aa1b22"
+│ Resource Group Name: "rg-st-hub-dev-cus-j2jg"
+│ Storage Account Name: "sthubdevcusj2jg"): polling after Create: polling failed: the Azure API returned the following error:
+│
+│ Status: "NetworkAclsValidationFailure"
+│ Code: ""
+│ Message: "Validation of network acls failure: ResourceBeingAcledHasWrongLocation:Microsoft.Storage resources in centralus cannot be ACL-ed to virtual network /subscriptions/f5db7161-4296-45e8-96e3-e67567aa1b22/resourceGroups/rg-jumpbox-hub-dev-scus/providers/Microsoft.Network/virtualNetworks/vnet-jumpbox-hub-dev-scus in southcentralus. Only resources in southcentralus, northcentralus, brazilsouth can be ACL-ed to virtual networks in southcentralus.."
+│ Activity Id: ""
+│
+│ ---
+│
+│ API Response:
+│
+│ ----[start]----
+│ {"status":"Failed","error":{"code":"NetworkAclsValidationFailure","message":"Validation of network acls failure: ResourceBeingAcledHasWrongLocation:Microsoft.Storage resources in centralus cannot be ACL-ed to virtual network /subscriptions/f5db7161-4296-45e8-96e3-e67567aa1b22/resourceGroups/rg-jumpbox-hub-dev-scus/providers/Microsoft.Network/virtualNetworks/vnet-jumpbox-hub-dev-scus in southcentralus. Only resources in southcentralus, northcentralus, brazilsouth can be ACL-ed to virtual networks in southcentralus.."}}
+│ -----[end]-----
+│
+│
+│   with module.storage_account.azurerm_storage_account.storage_account,
+│   on .terraform/modules/storage_account/storageAccount/main.tf line 6, in resource "azurerm_storage_account" "storage_account":
+│    6: resource "azurerm_storage_account" "storage_account" {
+```
+
 ## Requirements
 
 | Name | Version |
